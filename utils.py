@@ -61,7 +61,7 @@ def video_to_frames(video_path, output_folder='frames/', frame_prefix='frame_'):
     cap.release()
     print("Frame extraction completed.")
 
-def save_generated_images(model, input_images, output_dir='output_images/3'):
+def save_generated_images(model, input_images, output_dir='output_images/'):
     """
     Passes each image in the input_images list through the model and saves the generated output.
     
@@ -140,3 +140,79 @@ def images_to_video(image_folder, video_name, fps=30):
     # Release the video writer object
     video.release()
     print(f"Video saved as {video_name}")
+
+def CombineImages(idx, bg_dir, fg_dir, mask_dir, combined_dir, bg_images, fg_images, mask_images):
+    """
+    Combine corresponding background, foreground, and mask images into a single composite image.
+
+    Args:
+        idx (int): The index of the image being processed.
+
+    """
+
+    #Load background, foreground, and mask images
+    bg_image_path = os.path.join(bg_dir, bg_images[idx])
+    fg_image_path = os.path.join(fg_dir, fg_images[idx])
+    mask_image_path = os.path.join(mask_dir, mask_images[idx])
+
+    bg_image = cv2.imread(bg_image_path)  #Background
+    fg_image = cv2.imread(fg_image_path)  #Foreground
+    mask_image = cv2.imread(mask_image_path, cv2.IMREAD_GRAYSCALE)  #Mask in grayscale
+
+    #Ensure mask is binary (black and white) and corresponds to the foreground subject
+    _, binary_mask = cv2.threshold(mask_image, 128, 255, cv2.THRESH_BINARY)
+
+    #Resize mask and foreground to match the size of the background
+    fg_image = cv2.resize(fg_image, (bg_image.shape[1], bg_image.shape[0]))
+    binary_mask = cv2.resize(binary_mask, (bg_image.shape[1], bg_image.shape[0]))
+
+    #Apply the mask to the foreground to remove any bleed over the edges
+    fg_image_masked = cv2.bitwise_and(fg_image, fg_image, mask=binary_mask)
+
+    #Create an inverse mask to mask out the area in the background where the foreground will be placed
+    inv_mask = cv2.bitwise_not(binary_mask)
+
+    #Mask the background where the foreground will be placed
+    bg_image_masked = cv2.bitwise_and(bg_image, bg_image, mask=inv_mask)
+
+    #Combine the masked background and the masked foreground
+    combined_image = cv2.add(bg_image_masked, fg_image_masked)
+
+    #Save the combined image
+    combined_image_path = os.path.join(combined_dir, f'{idx:04d}_combined.png')
+    cv2.imwrite(combined_image_path, combined_image)
+
+    print(f"Processed and saved: {combined_image_path}")
+
+def CreateVideoFromImages(path, output_path, fps):
+    """
+    Creates an MP4 video from a sequence of images stored in the 'combined' folder.
+    """
+    #Directory containing combined images
+    combined_dir = path
+
+    #Output video file
+    output_video = f'{output_path}/final_combined_output.mp4'
+
+    #Get the list of image files in the combined folder
+    image_files = sorted([f for f in os.listdir(combined_dir) if f.endswith('.png')])
+
+    #Load the first image to get the width and height for the video
+    first_image_path = os.path.join(combined_dir, image_files[0])
+    frame = cv2.imread(first_image_path)
+    height, width, layers = frame.shape
+
+    #Define the video codec and create a VideoWriter object
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  #Codec for MP4
+    video = cv2.VideoWriter(output_video, fourcc, fps, (width, height))  # 30 FPS
+
+    #Loop through the images and write them to the video file
+    for image_file in image_files:
+        image_path = os.path.join(combined_dir, image_file)
+        frame = cv2.imread(image_path)
+        video.write(frame)  #Add frame to the video
+
+    #Release the video writer
+    video.release()
+
+    print(f"Video saved as {output_video}")
