@@ -1,8 +1,8 @@
 import os
 import cv2
 import numpy as np
-from tensorflow.keras.preprocessing.image import array_to_img
 import tensorflow as tf
+from tensorflow.keras.preprocessing.image import array_to_img
 
 def load_images(path):
     images = []
@@ -128,10 +128,14 @@ def images_to_video(image_folder, video_name, fps=30):
 
     # Loop through each image, read it, and add it to the video
     for image in images:
-        image_path = os.path.join(image_folder, image)
-        frame = cv2.imread(image_path)
-        video.write(frame)
-        print(f"Adding {image} to video")
+        try:
+            image_path = os.path.join(image_folder, image)
+            frame = cv2.imread(image_path)
+            video.write(frame)
+            # print(f"Adding {image} to video")
+        except:
+            print(f'Issues with frame {frame}')
+            continue
 
     # Release the video writer object
     video.release()
