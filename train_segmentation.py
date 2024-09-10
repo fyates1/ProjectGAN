@@ -1,3 +1,6 @@
+# Dataset sources:
+# Person Labelled dataset: https://ecosystem.supervisely.com/projects/persons#download
+
 import json
 
 import torch

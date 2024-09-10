@@ -1,3 +1,7 @@
+# Dataset sources:
+# Person Labelled dataset: https://ecosystem.supervisely.com/projects/persons#download
+# Classic-Anime dataset: https://huggingface.co/datasets/DucHaiten/Classic-Anime/tree/main
+
 import time
 
 from tqdm import tqdm
