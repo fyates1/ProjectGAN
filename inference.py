@@ -1,8 +1,8 @@
 import tensorflow as tf
 from tensorflow_examples.models.pix2pix import pix2pix
 
-from cycle_GAN import LinearDecayLR, generate_images
-from utils import load_images
+from cycle_GAN import LinearDecayLR
+from utils import load_images, save_generated_images, images_to_video
 
 
 OUTPUT_CHANNELS = 3
@@ -77,6 +77,15 @@ else:
     print('No checkpoint found')
     exit()
 
-real_images = 'real2anime/real'
+real_images = 'extracted_frames'
 good_images = load_images(real_images)
-generate_images(generator_f, good_images)
+
+output_dir='output_images/3'
+
+save_generated_images(generator_f, good_images, output_dir=output_dir)
+
+image_folder = output_dir  # Folder where your images are saved
+video_name = 'video_name.mp4'  # Name for the output video file
+fps = 24 # Frames per second (adjust based on your need)
+
+images_to_video(image_folder, video_name, fps)
