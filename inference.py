@@ -79,7 +79,7 @@ ckpt = tf.train.Checkpoint(
     discriminator_y_optimizer=discriminator_y_optimizer
     )
 
-checkpoint_path = '/checkpoints/train/'
+checkpoint_path = 'checkpoints/train'
 ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
 
 # If a checkpoint exists, restore the latest checkpoint.
