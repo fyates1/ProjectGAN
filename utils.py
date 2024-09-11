@@ -16,6 +16,18 @@ def load_images(path):
     images = np.array(images)
     return images
 
+def load_images_255(path):
+    images = []
+    for filename in os.listdir(path):
+        img = cv2.imread(os.path.join(path,filename))
+        if img is not None:
+            img = cv2.resize(img, (256,256)) # resize the image again to the desired size
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            images.append(img)
+    images = np.array(images)
+    return images
+
+
 
 def truncate_datasets(dataset_x, dataset_y):
     min_size = min(len(dataset_x), len(dataset_y))
@@ -91,12 +103,19 @@ def save_generated_images(model, input_images, output_dir='output_images/'):
         print(f"Image saved: {image_path}")
 
 
-def numerical_sort(value):
-    """
-    Helper function to sort filenames numerically.
-    Extracts the numeric part from the file name for proper sorting.
-    """
-    return int(''.join(filter(str.isdigit, value)))
+def numerical_sort(values):
+    sorted_values = []
+    for value in values:
+        try:
+            num = int(''.join(filter(str.isdigit, value)))
+            sorted_values.append((num, value))
+        except ValueError:
+            # Ignore files that can't be converted to a number
+            continue
+    # Sort by the extracted number and return only the file names
+    sorted_values.sort(key=lambda x: x[0])
+    return [val[1] for val in sorted_values]
+
 
 
 def images_to_video(image_folder, video_name, fps=30):
@@ -149,10 +168,12 @@ def CombineImages(idx, bg_dir, fg_dir, mask_dir, combined_dir, bg_images, fg_ima
         idx (int): The index of the image being processed.
 
     """
+    
 
     #Load background, foreground, and mask images
     bg_image_path = os.path.join(bg_dir, bg_images[idx])
     fg_image_path = os.path.join(fg_dir, fg_images[idx])
+    print(fg_image_path,bg_image_path)
     mask_image_path = os.path.join(mask_dir, mask_images[idx])
 
     bg_image = cv2.imread(bg_image_path)  #Background
@@ -181,7 +202,7 @@ def CombineImages(idx, bg_dir, fg_dir, mask_dir, combined_dir, bg_images, fg_ima
     #Save the combined image
     combined_image_path = os.path.join(combined_dir, f'{idx:04d}_combined.png')
     cv2.imwrite(combined_image_path, combined_image)
-
+    print(combined_image_path)
     print(f"Processed and saved: {combined_image_path}")
 
 def CreateVideoFromImages(path, output_path, fps):
