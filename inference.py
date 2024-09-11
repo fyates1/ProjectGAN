@@ -1,5 +1,5 @@
 import os
-
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 import numpy as np
 
 import tensorflow as tf
@@ -28,27 +28,27 @@ decay_start_epoch = 100
 
 # Defining the generators and the discriminators
 # Defining the Pix2Pix Generators
-generator_g = pix2pix.unet_generator(OUTPUT_CHANNELS, norm_type='instancenorm')
+# generator_g = pix2pix.unet_generator(OUTPUT_CHANNELS, norm_type='instancenorm')
 generator_f = pix2pix.unet_generator(OUTPUT_CHANNELS, norm_type='instancenorm')
 
-# Defining the Pix2Pix Discriminators
-discriminator_x = pix2pix.discriminator(norm_type='instancenorm', target=False)
-discriminator_y = pix2pix.discriminator(norm_type='instancenorm', target=False)
+# # Defining the Pix2Pix Discriminators
+# discriminator_x = pix2pix.discriminator(norm_type='instancenorm', target=False)
+# discriminator_y = pix2pix.discriminator(norm_type='instancenorm', target=False)
 
 # Defining the optimisers for the generators and the discriminators
 # For the generators
-generator_g_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+# generator_g_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 generator_f_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
-# For the discriminators
-discriminator_x_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-discriminator_y_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+# # # For the discriminators
+# discriminator_x_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+# discriminator_y_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
 optimizers = [
-    generator_g_optimizer,
+    # generator_g_optimizer,
     generator_f_optimizer,
-    discriminator_x_optimizer,
-    discriminator_y_optimizer
+    # discriminator_x_optimizer,
+    # discriminator_y_optimizer
 ]
 
 linear_decay_lr = LinearDecayLR(
@@ -69,20 +69,21 @@ linear_decay_lr = LinearDecayLR(
 
 print('Loading CycleGAN model...')
 ckpt = tf.train.Checkpoint(
-    generator_g=generator_g,
+    # generator_g=generator_g,
     generator_f=generator_f,
-    discriminator_x=discriminator_x,
-    discriminator_y=discriminator_y,
-    generator_g_optimizer=generator_g_optimizer,
+    # discriminator_x=discriminator_x,
+    # discriminator_y=discriminator_y,
+    # generator_g_optimizer=generator_g_optimizer,
     generator_f_optimizer=generator_f_optimizer,
-    discriminator_x_optimizer=discriminator_x_optimizer,
-    discriminator_y_optimizer=discriminator_y_optimizer
+    # discriminator_x_optimizer=discriminator_x_optimizer,
+    # discriminator_y_optimizer=discriminator_y_optimizer
     )
 
 checkpoint_path = 'checkpoints/train'
 ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
 
 # If a checkpoint exists, restore the latest checkpoint.
+
 if ckpt_manager.latest_checkpoint:
     ckpt.restore(ckpt_manager.latest_checkpoint)
     print ('Latest checkpoint restored')
@@ -98,8 +99,8 @@ model = Unet(
     in_channels=3,
     classes=1
 )
-model.load_state_dict(torch.load("segmentation_model/person_segmentation_unet_final.pth"))
-model = model.cuda()
+model.load_state_dict(torch.load("segmentation_model/person_segmentation_unet_final.pth", map_location=torch.device('cpu')))
+# model = model.cuda()
 model.eval()
 
 #Directories to save foreground, background, and mask images
@@ -111,6 +112,7 @@ os.makedirs(bg_dir, exist_ok=True)
 os.makedirs(mask_dir, exist_ok=True)
 
 #Transformation to be applied on each frame
+
 transform = transforms.Compose([
     transforms.Resize((256, 256)),
     transforms.ToTensor(),
@@ -132,7 +134,7 @@ while True:
 
     #Apply transformations
     input_image = Image.fromarray(frame_rgb)
-    input_tensor = transform(input_image).unsqueeze(0).cuda()
+    input_tensor = transform(input_image).unsqueeze(0)
 
     #Perform segmentation
     with torch.no_grad():
