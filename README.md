@@ -41,4 +41,4 @@ python inference.py
 
 ## Results
 
-The generated images will be saved in the `output_images` directory. To visualize the results, you can check the `segmentation_outputs` folder for segmented images and combined frames.
+The generated images will be saved in the `output_images` directory. To visualize the results, you can check the `segmentation_outputs` folder for segmented images and combined video frames.
